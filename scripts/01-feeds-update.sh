@@ -22,8 +22,8 @@ src-git openclash https://github.com/vernesong/OpenClash.git;dev
 # ddns-go - 原作者: sirpdboy 维护的 luci 版本
 src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git
 
-# luci-theme-aurora - 原作者: rosywrt
-src-git aurora https://github.com/rosywrt/luci-theme-aurora.git
+# luci-theme-aurora - 原作者: eamonxg (原 rosywrt 仓库已失效)
+src-git aurora https://github.com/eamonxg/luci-theme-aurora.git
 
 # luci-app-athena-led - 原作者: NONGFAH (雅典娜AX6600专属)
 src-git athena_led https://github.com/NONGFAH/luci-app-athena-led.git
@@ -48,7 +48,7 @@ fi
 
 # luci-theme-aurora
 if [ ! -d "package/custom/luci-theme-aurora" ]; then
-    git clone --depth=1 https://github.com/rosywrt/luci-theme-aurora.git package/custom/luci-theme-aurora
+    git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora.git package/custom/luci-theme-aurora
 fi
 
 # ddns-go
