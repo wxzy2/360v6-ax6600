@@ -5,12 +5,17 @@
 set -e
 
 DEVICE=$1
-BIN_DIR=$(find bin/targets -mindepth 2 -maxdepth 2 -type d | head -n1)
+BIN_DIR=$(find bin/targets -type d -mindepth 2 -maxdepth 2 | head -n1)
+if [ -z "$BIN_DIR" ] || [ ! -d "$BIN_DIR" ]; then
+    echo "⚠️ 未找到编译产物目录，跳过清单生成"
+    exit 0
+fi
 
-echo "🔍 检测固件中包含的插件..."
+echo "🔍 检测固件中包含的插件 (目录: $BIN_DIR)..."
 
-cd "$BIN_DIR"
-MANIFEST=$(ls *.manifest 2>/dev/null | head -n1)
+MANIFEST=$(ls "$BIN_DIR"/*.manifest 2>/dev/null | head -n1)
+# 提取文件名
+MANIFEST_NAME=$(basename "$MANIFEST" 2>/dev/null || echo "")
 
 cd $GITHUB_WORKSPACE/immortalwrt
 
@@ -31,8 +36,8 @@ cat > plugins-list.md << EOF
 |--------|------|
 EOF
 
-if [ -n "$MANIFEST" ] && [ -f "$BIN_DIR/$MANIFEST" ]; then
-    grep -E "^luci-app-|^luci-theme-" "$BIN_DIR/$MANIFEST" | \
+if [ -n "$MANIFEST_NAME" ] && [ -f "$BIN_DIR/$MANIFEST_NAME" ]; then
+    grep -E "^luci-app-|^luci-theme-" "$BIN_DIR/$MANIFEST_NAME" | \
         awk '{printf "| `%s` | %s |\n", $1, $2}' >> plugins-list.md
 fi
 
@@ -46,7 +51,7 @@ cat >> plugins-list.md << EOF
 <summary>点击展开查看所有已安装包</summary>
 
 \`\`\`
-$(cat "$BIN_DIR/$MANIFEST" 2>/dev/null || echo "manifest 未找到")
+$(cat "$BIN_DIR/$MANIFEST_NAME" 2>/dev/null || echo "manifest 未找到")
 \`\`\`
 
 </details>

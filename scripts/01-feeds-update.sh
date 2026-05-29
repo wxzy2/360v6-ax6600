@@ -1,71 +1,58 @@
 #!/bin/bash
 # ============================================
-# 添加第三方插件源 (原作者仓库)
+# 第三方插件管理 (重构版 - 解决冲突与失效地址)
 # ============================================
 set -e
 
-echo "📥 添加第三方 feeds 源..."
+# ============ 1. 基础 Feeds 配置 ============
+# 说明：不再通过 src-git 添加单插件仓库，避免 feeds 解析错误。
+# 仅保留多包综合仓库。
+echo "📥 正在配置 Feeds 源..."
 
 # 备份原配置
-cp feeds.conf.default feeds.conf.default.bak
+[ -f feeds.conf.default.bak ] || cp feeds.conf.default feeds.conf.default.bak
 
-# 追加第三方源(原作者仓库)
+# 还原并追加（确保幂等性）
+cp feeds.conf.default.bak feeds.conf.default
 cat >> feeds.conf.default << 'EOF'
 
-# ===== 第三方插件源 =====
-# OpenClash - 原作者: vernesong
-src-git openclash https://github.com/vernesong/OpenClash.git;dev
-
-# luci-app-homeproxy - 原作者: immortalwrt 官方维护
-# (homeproxy 已在 immortalwrt 官方 feeds,无需额外添加)
-
-# ddns-go - 原作者: sirpdboy 维护的 luci 版本
-src-git ddnsgo https://github.com/sirpdboy/luci-app-ddns-go.git
-
-# luci-theme-aurora - 原作者: eamonxg (原 rosywrt 仓库已失效)
-src-git aurora https://github.com/eamonxg/luci-theme-aurora.git
-
-# luci-app-athena-led - 原作者: NONGFAH (雅典娜AX6600专属)
-src-git athena_led https://github.com/NONGFAH/luci-app-athena-led.git
-
-# aria2 - 原作者: 官方 luci 已有,使用扩展版
-src-git aria2 https://github.com/sirpdboy/luci-app-aria2.git
-
-# OpenList2 - 原作者: sbwml
-src-git openlist2 https://github.com/sbwml/luci-app-openlist2.git
-
+# ===== 自定义综合插件源 =====
+# (目前 ImmortalWrt 官方 feeds 已包含大部分常用插件，如 aria2, ddns-go, openclash)
+# 如果官方源版本较旧，可在此添加特定仓库，但建议优先使用官方源以保证依赖兼容性。
 EOF
 
-echo "✅ feeds 源添加完成"
+echo "✅ Feeds 源配置完成"
 
-# ============ 拷贝单独插件到 package 目录 ============
+# ============ 2. 独立插件克隆 (package/custom) ============
+# 说明：对于单包仓库或需要特定版本的插件，直接克隆到 package 目录。
+echo "📥 正在克隆独立插件..."
 mkdir -p package/custom
 
-# OpenClash
+# 1. OpenClash (使用官方 dev 分支)
 if [ ! -d "package/custom/openclash" ]; then
     git clone --depth=1 -b dev https://github.com/vernesong/OpenClash.git package/custom/openclash
 fi
 
-# luci-theme-aurora
+# 2. luci-theme-aurora (更新为 eamonxg 维护的新地址)
 if [ ! -d "package/custom/luci-theme-aurora" ]; then
     git clone --depth=1 https://github.com/eamonxg/luci-theme-aurora.git package/custom/luci-theme-aurora
 fi
 
-# ddns-go
-if [ ! -d "package/custom/luci-app-ddns-go" ]; then
-    git clone --depth=1 https://github.com/sirpdboy/luci-app-ddns-go.git package/custom/luci-app-ddns-go
-fi
-
-# luci-app-athena-led
+# 3. luci-app-athena-led (雅典娜AX6600专属插件)
 if [ ! -d "package/custom/luci-app-athena-led" ]; then
     git clone --depth=1 https://github.com/NONGFAH/luci-app-athena-led.git package/custom/luci-app-athena-led
-    chmod +x package/custom/luci-app-athena-led/luci-app-athena-led/root/etc/init.d/athena_led 2>/dev/null || true
-    chmod +x package/custom/luci-app-athena-led/luci-app-athena-led/root/usr/sbin/athena-led 2>/dev/null || true
+    # 修正执行权限
+    find package/custom/luci-app-athena-led -name "athena_led" -o -name "athena-led" | xargs chmod +x 2>/dev/null || true
 fi
 
-# OpenList2
+# 4. OpenList2 (sbwml 维护)
 if [ ! -d "package/custom/luci-app-openlist2" ]; then
     git clone --depth=1 https://github.com/sbwml/luci-app-openlist2.git package/custom/luci-app-openlist2
 fi
 
-echo "✅ 第三方插件克隆完成"
+# 5. ddns-go (使用 iRis7656 维护版，不再使用失效的 sirpdboy 地址)
+if [ ! -d "package/custom/luci-app-ddns-go" ]; then
+    git clone --depth=1 https://github.com/iRis7656/luci-app-ddns-go.git package/custom/luci-app-ddns-go
+fi
+
+echo "✅ 独立插件处理完成"

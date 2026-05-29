@@ -9,12 +9,14 @@ echo "🔧 强制启用 nginx,禁用 uhttpd..."
 # ============ 1. 在 .config 中显式声明 ============
 # 禁用 uhttpd 全家桶
 sed -i '/CONFIG_PACKAGE_uhttpd/d' .config
+sed -i '/CONFIG_PACKAGE_luci-app-uhttpd/d' .config
 sed -i '/CONFIG_PACKAGE_luci-light/d' .config
 
 cat >> .config << 'EOF'
 # uhttpd disabled
 # CONFIG_PACKAGE_uhttpd is not set
 # CONFIG_PACKAGE_uhttpd-mod-ubus is not set
+# CONFIG_PACKAGE_luci-app-uhttpd is not set
 # CONFIG_PACKAGE_luci-light is not set
 
 # nginx enabled
